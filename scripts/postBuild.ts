@@ -3,7 +3,6 @@ import { cp, readFile, writeFile, access } from "node:fs/promises";
 import fg from "fast-glob";
 import { dirname, extname } from "node:path";
 import type Package from "../package.json";
-import { generateInterface } from "./typegen.ts";
 import { waitFor } from "@overextended/core/utils";
 
 function reduceArray(name: string, files?: string[]): string {
@@ -71,7 +70,9 @@ export default async function () {
     fxFiles?: string[];
   } = JSON.parse(await readFile("./package.json", "utf8"));
 
-  const files = await generateDirectoryGlobs("public");
+  // public/ is optional: static files players may download, copied to dist/.
+  const hasPublic = existsSync("./public");
+  const files = hasPublic ? await generateDirectoryGlobs("public") : [];
   let web;
 
   try {
@@ -112,14 +113,10 @@ ${reduceArray("dependencies", fxDependencies)}${reduceArray("files", files)}${(f
 
   if (body === fxmanifest) return;
 
-  generateInterface("public");
-
   console.log(`Generated new fxmanifest.lua`);
   fxmanifest = body;
 
-  await cp("./public", "./dist", {
-    recursive: true,
-  });
+  if (hasPublic) await cp("./public", "./dist", { recursive: true });
 
   await writeFile("./fxmanifest.lua", body);
   await writeFile(".yarn.installed", new Date().toISOString());
