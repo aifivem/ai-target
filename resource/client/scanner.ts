@@ -1,65 +1,79 @@
-import { cache, resourceExport } from "@aicore-fivem/lib/client";
-import { createLogger } from "@aicore-fivem/lib/shared";
-import { CORE } from "@aicore-fivem/shared";
-import { ResourceName } from "common";
-import { NuiMessage, type TargetPoint } from "common/nui";
-import { MARKER_EXTRA, reachOf, type TargetOption } from "common/options";
-import { CameraStream } from "./camera";
-import { allowed, currentMemberships } from "./conditions";
-import { entityAnchor, entityDistance } from "./geometry";
-import { registry } from "./registry";
-import { Walker } from "./walker";
-import { zoneAnchor, type TargetZone, type Vec3 } from "./zones";
+import { cache, resourceExport } from "@aicore-fivem/lib/client"
+import { createLogger } from "@aicore-fivem/lib/shared"
+import { CORE } from "@aicore-fivem/shared"
+import { ResourceName } from "common"
+import { NuiMessage, type TargetPoint } from "common/nui"
+import { MARKER_EXTRA, reachOf, type TargetOption } from "common/options"
+import { CameraStream } from "./camera"
+import { allowed, currentMemberships } from "./conditions"
+import { entityAnchor, entityDistance } from "./geometry"
+import { registry } from "./registry"
+import { Walker } from "./walker"
+import { zoneAnchor, type TargetZone, type Vec3 } from "./zones"
 
-const log = createLogger(ResourceName);
-const core = resourceExport(CORE.resource);
+const log = createLogger(ResourceName)
+const core = resourceExport(CORE.resource)
 
 /** A marker with what it needs to act: its options in reach, the entity or zone, where it is. */
 export interface ScanPoint {
-  key: string;
-  entity: number;
-  zone: number | null;
-  coords: Vec3;
-  distance: number;
+  key: string
+  entity: number
+  zone: number | null
+  coords: Vec3
+  distance: number
   /** Options the player can use now (in reach and allowed). */
-  usable: TargetOption[];
+  usable: TargetOption[]
   /** Options whose marker shows (allowed, within reach + a few metres). */
-  visible: TargetOption[];
+  visible: TargetOption[]
 }
 
-const SCAN_NEAR = 250;
-const SCAN_IDLE = 1000;
-const WALK_EVERY = 1000;
+const SCAN_NEAR = 250
+const SCAN_IDLE = 1000
+const WALK_EVERY = 1000
 /** Zones are looked up this far around the player (their circle radius is added). */
-const ZONE_RANGE = 15;
+const ZONE_RANGE = 15
 /** Line of sight is probed for at most this many markers per scan, the nearest first. */
-const LOS_LIMIT = 16;
+const LOS_LIMIT = 16
 
 /** Line of sight one scan behind: a probe started now is read on the next scan, so nothing waits for it. */
 class Sight {
-  private readonly probes = new Map<string, { handle: number; visible: boolean }>();
+  private readonly probes = new Map<
+    string,
+    { handle: number; visible: boolean }
+  >()
 
   visible(key: string): boolean {
-    return this.probes.get(key)?.visible ?? true;
+    return this.probes.get(key)?.visible ?? true
   }
 
   update(points: ScanPoint[]): void {
-    const [cx = 0, cy = 0, cz = 0] = GetFinalRenderedCamCoord();
-    const keep = new Set<string>();
+    const [cx = 0, cy = 0, cz = 0] = GetFinalRenderedCamCoord()
+    const keep = new Set<string>()
     for (const point of points.slice(0, LOS_LIMIT)) {
-      keep.add(point.key);
-      const probe = this.probes.get(point.key);
+      keep.add(point.key)
+      const probe = this.probes.get(point.key)
       if (probe) {
-        const [status, hit] = GetShapeTestResult(probe.handle);
+        const [status, hit] = GetShapeTestResult(probe.handle)
         // 1 = still running; read it next time.
-        if (status === 1) continue;
-        probe.visible = !hit;
+        if (status === 1) continue
+        probe.visible = !hit
       }
       // World only (flag 1): the target itself or a rack next to it must not hide its own marker.
-      const handle = StartShapeTestLosProbe(cx, cy, cz, point.coords.x, point.coords.y, point.coords.z, 1, cache.ped, 7);
-      this.probes.set(point.key, { handle, visible: probe?.visible ?? true });
+      const handle = StartShapeTestLosProbe(
+        cx,
+        cy,
+        cz,
+        point.coords.x,
+        point.coords.y,
+        point.coords.z,
+        1,
+        cache.ped,
+        7
+      )
+      this.probes.set(point.key, { handle, visible: probe?.visible ?? true })
     }
-    for (const key of this.probes.keys()) if (!keep.has(key)) this.probes.delete(key);
+    for (const key of this.probes.keys())
+      if (!keep.has(key)) this.probes.delete(key)
   }
 }
 
@@ -69,88 +83,137 @@ class Sight {
  * changed. Off while the game is not on the player's own camera, in a vehicle, dead or paused.
  */
 export class Scanner {
-  points = new Map<string, ScanPoint>();
-  disabled = false;
-  private readonly walker = new Walker();
-  private readonly sight = new Sight();
-  private readonly camera = new CameraStream();
-  private readonly zones: TargetZone[] = [];
-  private lastWalk = 0;
-  private lastSent = "";
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  points = new Map<string, ScanPoint>()
+  disabled = false
+  private readonly walker = new Walker()
+  private readonly sight = new Sight()
+  private readonly camera = new CameraStream()
+  private readonly zones: TargetZone[] = []
+  private lastWalk = 0
+  private lastSent = ""
+  private timer: ReturnType<typeof setTimeout> | null = null
 
   start(): void {
-    if (this.timer === null) this.timer = setTimeout(() => void this.run(), 0);
+    if (this.timer === null) this.timer = setTimeout(() => void this.run(), 0)
   }
 
   private active(): boolean {
-    return !this.disabled && !IsPauseMenuActive() && !IsNuiFocused() && GetRenderingCam() === -1 && cache.vehicle === false && !IsEntityDead(cache.ped);
+    return (
+      !this.disabled &&
+      !IsPauseMenuActive() &&
+      !IsNuiFocused() &&
+      GetRenderingCam() === -1 &&
+      cache.vehicle === false &&
+      !IsEntityDead(cache.ped)
+    )
   }
 
   private async run(): Promise<void> {
     try {
       if (this.active()) {
         if (GetGameTimer() - this.lastWalk >= WALK_EVERY) {
-          this.lastWalk = GetGameTimer();
-          await this.walker.walk();
+          this.lastWalk = GetGameTimer()
+          await this.walker.walk()
         }
-        this.scan();
-      } else this.clear();
+        this.scan()
+      } else this.clear()
     } catch (error) {
-      log.error("target scan failed", error);
+      log.error("target scan failed", error)
     }
-    this.timer = setTimeout(() => void this.run(), this.points.size ? SCAN_NEAR : SCAN_IDLE);
+    this.timer = setTimeout(
+      () => void this.run(),
+      this.points.size ? SCAN_NEAR : SCAN_IDLE
+    )
   }
 
   private clear(): void {
-    this.points.clear();
-    this.send([]);
+    this.points.clear()
+    this.send([])
   }
 
   private scan(): void {
-    const [px = 0, py = 0, pz = 0] = GetEntityCoords(cache.ped, false);
-    const player = { x: px, y: py, z: pz };
-    const held = currentMemberships();
-    const found: ScanPoint[] = [];
+    const [px = 0, py = 0, pz = 0] = GetEntityCoords(cache.ped, false)
+    const player = { x: px, y: py, z: pz }
+    const held = currentMemberships()
+    const found: ScanPoint[] = []
 
-    registry.zones.near(px, py, ZONE_RANGE, this.zones);
+    registry.zones.near(px, py, ZONE_RANGE, this.zones)
     for (const zone of this.zones) {
-      const coords = zoneAnchor(zone, pz);
-      const distance = Math.hypot(coords.x - px, coords.y - py, coords.z - pz);
-      this.collect(found, `z:${zone.id}`, 0, zone.id, coords, distance, zone.options, held);
+      const coords = zoneAnchor(zone, pz)
+      const distance = Math.hypot(coords.x - px, coords.y - py, coords.z - pz)
+      this.collect(
+        found,
+        `z:${zone.id}`,
+        0,
+        zone.id,
+        coords,
+        distance,
+        zone.options,
+        held
+      )
     }
 
     for (const near of this.walker.nearby) {
-      if (!DoesEntityExist(near.entity)) continue;
+      if (!DoesEntityExist(near.entity)) continue
       const options = [
         ...(registry.localEntities.map.get(near.entity) ?? []),
-        ...(near.netId !== false ? (registry.netEntities.map.get(near.netId) ?? []) : []),
+        ...(near.netId !== false
+          ? (registry.netEntities.map.get(near.netId) ?? [])
+          : []),
         ...(registry.models.map.get(near.model) ?? []),
         ...registry.globals[near.kind],
-      ];
-      if (options.length === 0) continue;
-      const isPed = near.kind === "ped" || near.kind === "player";
-      const distance = isPed ? Math.hypot(...difference(entityAnchor(near.entity, near.model, true), player)) : entityDistance(near.entity, near.model, player);
-      this.collect(found, `e:${near.entity}`, near.entity, null, entityAnchor(near.entity, near.model, isPed), distance, options, held);
+      ]
+      if (options.length === 0) continue
+      const isPed = near.kind === "ped" || near.kind === "player"
+      const distance = isPed
+        ? Math.hypot(
+            ...difference(entityAnchor(near.entity, near.model, true), player)
+          )
+        : entityDistance(near.entity, near.model, player)
+      this.collect(
+        found,
+        `e:${near.entity}`,
+        near.entity,
+        null,
+        entityAnchor(near.entity, near.model, isPed),
+        distance,
+        options,
+        held
+      )
     }
 
-    found.sort((a, b) => a.distance - b.distance);
-    this.sight.update(found);
-    this.points.clear();
-    for (const point of found) if (this.sight.visible(point.key)) this.points.set(point.key, point);
-    this.send([...this.points.values()]);
+    found.sort((a, b) => a.distance - b.distance)
+    this.sight.update(found)
+    this.points.clear()
+    for (const point of found)
+      if (this.sight.visible(point.key)) this.points.set(point.key, point)
+    this.send([...this.points.values()])
   }
 
-  private collect(out: ScanPoint[], key: string, entity: number, zone: number | null, coords: Vec3, distance: number, options: TargetOption[], held: Map<string, number>): void {
-    const visible: TargetOption[] = [];
-    const usable: TargetOption[] = [];
+  private collect(
+    out: ScanPoint[],
+    key: string,
+    entity: number,
+    zone: number | null,
+    coords: Vec3,
+    distance: number,
+    options: TargetOption[],
+    held: Map<string, number>
+  ): void {
+    const visible: TargetOption[] = []
+    const usable: TargetOption[] = []
     for (const option of options) {
-      const reach = reachOf(option);
-      if (distance > reach + MARKER_EXTRA || !allowed(option, entity, distance, coords, held)) continue;
-      visible.push(option);
-      if (distance <= reach) usable.push(option);
+      const reach = reachOf(option)
+      if (
+        distance > reach + MARKER_EXTRA ||
+        !allowed(option, entity, distance, coords, held)
+      )
+        continue
+      visible.push(option)
+      if (distance <= reach) usable.push(option)
     }
-    if (visible.length) out.push({ key, entity, zone, coords, distance, usable, visible });
+    if (visible.length)
+      out.push({ key, entity, zone, coords, distance, usable, visible })
   }
 
   /** The overlay gets the list only when something it draws changed. */
@@ -163,28 +226,34 @@ export class Scanner {
       label: (p.usable[0] ?? p.visible[0])?.label ?? "",
       count: p.usable.length,
       reachable: p.usable.length > 0,
-    }));
-    const key = interactKey();
-    const text = JSON.stringify(list) + key;
-    if (text === this.lastSent) return;
-    this.lastSent = text;
-    SendNUIMessage({ action: NuiMessage.points, data: { points: list, key } });
-    this.camera.set(list.length > 0);
+    }))
+    const key = interactKey()
+    const text = JSON.stringify(list) + key
+    if (text === this.lastSent) return
+    this.lastSent = text
+    SendNUIMessage({ action: NuiMessage.points, data: { points: list, key } })
+    this.camera.set(list.length > 0)
   }
 }
 
-const round = (n: number): number => Math.round(n * 100) / 100;
+const round = (n: number): number => Math.round(n * 100) / 100
 
 /** ai-core's interaction key as the player bound it (a mouse or pad binding comes back as an icon code: shown as E). */
-let interactHash = 0;
+let interactHash = 0
 function interactKey(): string {
   if (!interactHash) {
     // The mapping command carries the default key the admin panel set (`+aicore_interact_<key>`); asked until known.
-    const key = core.GetKeybindKey("aicore_interact");
-    if (typeof key !== "string") return "E";
-    interactHash = GetHashKey(`+aicore_interact_${key}`) | 0x80000000;
+    const key = core.GetKeybindKey("aicore_interact")
+    if (typeof key !== "string") return "E"
+    interactHash = GetHashKey(`+aicore_interact_${key}`) | 0x80000000
   }
-  const label = GetControlInstructionalButton(0, interactHash, true).substring(2);
-  return /^\w{1,6}$/.test(label) ? label : "E";
+  const label = GetControlInstructionalButton(0, interactHash, true).substring(
+    2
+  )
+  return /^\w{1,6}$/.test(label) ? label : "E"
 }
-const difference = (a: Vec3, b: Vec3): [number, number, number] => [a.x - b.x, a.y - b.y, a.z - b.z];
+const difference = (a: Vec3, b: Vec3): [number, number, number] => [
+  a.x - b.x,
+  a.y - b.y,
+  a.z - b.z,
+]
