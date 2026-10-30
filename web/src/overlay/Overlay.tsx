@@ -92,7 +92,7 @@ export function Overlay() {
   }, [points, schedule]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden [filter:drop-shadow(0.1vh_0.1vh_0_rgba(0,0,0,0.75))]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {points.map((point) => (
         <div
           key={point.key}
@@ -110,23 +110,21 @@ export function Overlay() {
   );
 }
 
-/** Ambient marker = a small white ring with a dot; focused = the key cap and the action. */
+/** Ambient marker = a small white ring with a dot; focused = a white key cap with the action beside it (tgiann-radialmenu-target). */
 function Marker({ point, focused, keyLabel }: { point: TargetPoint; focused: boolean; keyLabel: string }) {
   if (!focused) {
     return (
-      <span className="absolute flex size-[1.3vh] items-center justify-center rounded-full border-2 border-text [transform:translate(-50%,-50%)]">
-        <span className="size-[0.35vh] rounded-full bg-text" />
+      <span className="absolute left-[-0.65vh] top-[-0.65vh] flex size-[1.3vh] items-center justify-center rounded-full border-[0.15vh] border-white [box-shadow:0.1vh_0.1vh_0_rgba(0,0,0,0.75),inset_0.1vh_0.1vh_0_rgba(0,0,0,0.75)]">
+        <span className="size-[0.4vh] rounded-full bg-white [box-shadow:0.1vh_0.1vh_0_rgba(0,0,0,0.75)]" />
       </span>
     );
   }
   return (
-    <div className="absolute flex items-center gap-[1vh] [transform:translate(-1.5vh,-50%)]">
-      <span className="flex h-[3vh] min-w-[3vh] items-center justify-center rounded-[0.6vh] border border-accent bg-[rgba(var(--panel-rgb),0.92)] px-[0.7vh] text-[1.4vh] font-semibold text-accent">
-        {keyLabel}
-      </span>
-      <span className="flex items-center gap-[0.8vh] whitespace-nowrap rounded-[0.6vh] border border-line bg-[rgba(var(--panel-rgb),0.92)] px-[1.2vh] py-[0.5vh] text-[1.4vh] font-medium text-text">
+    <div className="absolute left-[-0.9vh] top-[-0.9vh] flex h-[1.8vh] items-center gap-[0.7vh]">
+      <span className="flex h-[1.8vh] min-w-[1.8vh] items-center justify-center rounded-[0.3vh] bg-white px-[0.3vh] text-[1.05vh] font-bold leading-none text-row [box-shadow:0.1vh_0.1vh_0_rgba(0,0,0,0.75)]">{keyLabel}</span>
+      <span className="flex items-center gap-[0.6vh] whitespace-nowrap text-[1.5vh] font-bold uppercase text-white [text-shadow:0.1vh_0.1vh_0_rgba(0,0,0,0.75)]">
         {point.label}
-        {point.count > 1 && <span className="text-[1.2vh] text-text-3">+{point.count - 1}</span>}
+        {point.count > 1 && <span className="text-[1.2vh] text-white/70">+{point.count - 1}</span>}
       </span>
     </div>
   );
