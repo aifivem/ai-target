@@ -1,3 +1,4 @@
+import { every } from "@aicore-fivem/lib/client";
 import { NuiMessage } from "common/nui";
 
 /** How often the camera is read while markers are on screen (ms). */
@@ -8,18 +9,19 @@ const INTERVAL = 24;
  * the camera moved, so a still camera costs three native reads per tick and no message.
  */
 export class CameraStream {
-  private timer: ReturnType<typeof setInterval> | null = null;
+  private readonly job = every(INTERVAL, () => this.tick(), {
+    active: false,
+    name: "camera",
+  });
   private last = [0, 0, 0, 0, 0, 0];
 
   set(on: boolean): void {
-    if (on && this.timer === null) {
+    if (on === this.job.running) return;
+    if (on) {
       this.last = [0, 0, 0, 0, 0, 0];
       this.tick();
-      this.timer = setInterval(() => this.tick(), INTERVAL);
-    } else if (!on && this.timer !== null) {
-      clearInterval(this.timer);
-      this.timer = null;
     }
+    this.job.set(on);
   }
 
   private tick(): void {
