@@ -1,4 +1,4 @@
-import { cache, optionalExport } from "@aicore-fivem/lib/client";
+import { cache, resourceExport } from "@aicore-fivem/lib/client";
 import { createLogger } from "@aicore-fivem/lib/shared";
 import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
@@ -12,6 +12,7 @@ import { Walker } from "./walker";
 import { zoneAnchor, type TargetZone, type Vec3 } from "./zones";
 
 const log = createLogger(ResourceName);
+const core = resourceExport(CORE.resource);
 
 /** A marker with what it needs to act: its options in reach, the entity or zone, where it is. */
 export interface ScanPoint {
@@ -179,7 +180,7 @@ let interactHash = 0;
 function interactKey(): string {
   if (!interactHash) {
     // The mapping command carries the default key the admin panel set (`+aicore_interact_<key>`); asked until known.
-    const key = optionalExport(CORE.resource)?.GetKeybindKey("aicore_interact");
+    const key = core.GetKeybindKey("aicore_interact");
     if (typeof key !== "string") return "E";
     interactHash = GetHashKey(`+aicore_interact_${key}`) | 0x80000000;
   }
