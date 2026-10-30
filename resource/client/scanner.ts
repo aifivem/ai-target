@@ -1,5 +1,6 @@
-import { cache } from "@aicore-fivem/lib/client";
+import { cache, optionalExport } from "@aicore-fivem/lib/client";
 import { createLogger } from "@aicore-fivem/lib/shared";
+import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
 import { NuiMessage, type TargetPoint } from "common/nui";
 import { MARKER_EXTRA, reachOf, type TargetOption } from "common/options";
@@ -174,9 +175,15 @@ export class Scanner {
 const round = (n: number): number => Math.round(n * 100) / 100;
 
 /** ai-core's interaction key as the player bound it (a mouse or pad binding comes back as an icon code: shown as E). */
-const INTERACT = GetHashKey("+aicore_interact_E") | 0x80000000;
+let interactHash = 0;
 function interactKey(): string {
-  const label = GetControlInstructionalButton(0, INTERACT, true).substring(2);
+  if (!interactHash) {
+    // The mapping command carries the default key the admin panel set (`+aicore_interact_<key>`); asked until known.
+    const key = optionalExport(CORE.resource)?.GetKeybindKey("aicore_interact");
+    if (typeof key !== "string") return "E";
+    interactHash = GetHashKey(`+aicore_interact_${key}`) | 0x80000000;
+  }
+  const label = GetControlInstructionalButton(0, interactHash, true).substring(2);
   return /^\w{1,6}$/.test(label) ? label : "E";
 }
 const difference = (a: Vec3, b: Vec3): [number, number, number] => [a.x - b.x, a.y - b.y, a.z - b.z];
