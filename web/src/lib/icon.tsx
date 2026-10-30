@@ -24,7 +24,13 @@ function iconOf(name: string | undefined): IconDefinition | null {
   return byName.get(last.replace(/^fa-/, "")) ?? null;
 }
 
-export function OptionIcon({ name, className }: { name?: string; className?: string }) {
+export function OptionIcon({
+  name,
+  className,
+}: {
+  name?: string;
+  className?: string;
+}) {
   const [, setLoaded] = useState(byName !== null);
   useEffect(() => {
     if (byName) return;
@@ -33,5 +39,7 @@ export function OptionIcon({ name, className }: { name?: string; className?: str
     return () => void waiting.delete(done);
   }, []);
   const icon = iconOf(name);
-  return icon ? <FontAwesomeIcon icon={icon} className={className} aria-hidden /> : null;
+  return icon ? (
+    <FontAwesomeIcon icon={icon} className={className} aria-hidden />
+  ) : null;
 }

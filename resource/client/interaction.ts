@@ -1,4 +1,4 @@
-import { registerExport, TickLoop } from "@aicore-fivem/lib/client";
+import { controls, registerExport } from "@aicore-fivem/lib/client";
 import { NuiCallback, NuiMessage } from "common/nui";
 import type { TargetOption } from "common/options";
 import { runOption } from "./actions";
@@ -16,15 +16,12 @@ type NuiReply = (value: unknown) => void;
 export class Interaction {
   private focus: string | null = null;
   private menu: { point: ScanPoint; options: TargetOption[] } | null = null;
-  private readonly block = new TickLoop(() => {
-    for (const control of BLOCKED_CONTROLS)
-      DisableControlAction(0, control, true);
-  });
 
   constructor(private readonly scanner: Scanner) {
     RegisterNuiCallback(NuiCallback.focus, (key: unknown, cb: NuiReply) => {
       this.focus = typeof key === "string" ? key : null;
-      this.block.set(this.focus !== null);
+      if (this.focus !== null) controls.disable("target", BLOCKED_CONTROLS);
+      else controls.enable("target");
       cb(true);
     });
     RegisterNuiCallback(NuiCallback.select, (index: unknown, cb: NuiReply) => {
