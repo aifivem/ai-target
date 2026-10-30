@@ -1,4 +1,4 @@
-import { cache, resourceExport } from "@aicore-fivem/lib/client";
+import { cache, every, resourceExport } from "@aicore-fivem/lib/client";
 import { createLogger } from "@aicore-fivem/lib/shared";
 import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
@@ -91,10 +91,35 @@ export class Scanner {
   private readonly zones: TargetZone[] = [];
   private lastWalk = 0;
   private lastSent = "";
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private busy = false;
+  private readonly near = every(SCAN_NEAR, () => this.tick(), {
+    active: false,
+    name: "targetScan",
+  });
+  private readonly idle = every(SCAN_IDLE, () => this.tick(), {
+    active: false,
+    name: "targetIdle",
+  });
 
   start(): void {
-    if (this.timer === null) this.timer = setTimeout(() => void this.run(), 0);
+    this.rate();
+  }
+
+  /** The fast scan while markers are around, the slow one otherwise. */
+  private rate(): void {
+    const fast = this.points.size > 0;
+    this.near.set(fast);
+    this.idle.set(!fast);
+  }
+
+  /** One scan at a time (an entity walk awaits). */
+  private tick(): void {
+    if (this.busy) return;
+    this.busy = true;
+    void this.run().finally(() => {
+      this.busy = false;
+      this.rate();
+    });
   }
 
   private active(): boolean {
@@ -120,10 +145,6 @@ export class Scanner {
     } catch (error) {
       log.error("target scan failed", error);
     }
-    this.timer = setTimeout(
-      () => void this.run(),
-      this.points.size ? SCAN_NEAR : SCAN_IDLE,
-    );
   }
 
   private clear(): void {
