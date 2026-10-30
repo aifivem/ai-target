@@ -2,23 +2,23 @@
 
 /** A marker: one entity or zone with options; world position, what the prompt says, whether it is in reach. */
 export interface TargetPoint {
-  key: string
-  x: number
-  y: number
-  z: number
-  label: string
+  key: string;
+  x: number;
+  y: number;
+  z: number;
+  label: string;
   /** Options in reach; more than one opens the menu. */
-  count: number
-  reachable: boolean
+  count: number;
+  reachable: boolean;
 }
 
 /** The game camera: x, y, z, pitch, yaw (degrees), vertical fov (degrees). */
-export type TargetCamera = [number, number, number, number, number, number]
+export type TargetCamera = [number, number, number, number, number, number];
 
 export interface MenuOption {
-  index: number
-  label: string
-  icon?: string
+  index: number;
+  label: string;
+  icon?: string;
 }
 
 /** Client -> NUI messages: `{ action, data }`. */
@@ -30,7 +30,7 @@ export const NuiMessage = {
   /** data: { title, options: MenuOption[] }, several options: pick one. */
   openMenu: "openMenu",
   closeMenu: "closeMenu",
-} as const
+} as const;
 
 /** NUI -> client callbacks. */
 export const NuiCallback = {
@@ -40,4 +40,4 @@ export const NuiCallback = {
   select: "select",
   /** () -> true, the menu was closed without a pick. */
   closeMenu: "closeMenu",
-} as const
+} as const;

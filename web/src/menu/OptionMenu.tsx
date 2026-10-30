@@ -1,77 +1,77 @@
-import { useEffect, useState } from "react"
-import { motion } from "motion/react"
-import { fetchNui, useNuiEvent } from "fivem-nui-react"
+import { useEffect, useState } from "react";
+import { motion } from "motion/react";
+import { fetchNui, useNuiEvent } from "fivem-nui-react";
 import {
   NuiCallback,
   NuiMessage,
   type MenuOption,
-} from "../../../resource/common/nui"
-import { mockMenu } from "../dev/mock"
+} from "../../../resource/common/nui";
+import { mockMenu } from "../dev/mock";
 
-const OPEN_OPTIONS = { mockData: mockMenu(), mockDelay: 200 }
+const OPEN_OPTIONS = { mockData: mockMenu(), mockDelay: 200 };
 /** glide(0.25, 0.1) from tgiann-ui nui-performance: compositor tween. */
 const ENTER = {
   type: "tween",
   duration: 0.22,
   ease: [0.229, 0.098, 0.248, 0.985],
-} as const
+} as const;
 
 function toMenu(
-  value: unknown
+  value: unknown,
 ): { title: string; options: MenuOption[] } | null {
-  if (typeof value !== "object" || value === null) return null
-  const { title, options } = value as { title?: unknown; options?: unknown }
-  if (!Array.isArray(options)) return null
+  if (typeof value !== "object" || value === null) return null;
+  const { title, options } = value as { title?: unknown; options?: unknown };
+  if (!Array.isArray(options)) return null;
   const list = options.filter(
     (o): o is MenuOption =>
       typeof o === "object" &&
       o !== null &&
       typeof (o as MenuOption).index === "number" &&
-      typeof (o as MenuOption).label === "string"
-  )
-  return { title: typeof title === "string" ? title : "", options: list }
+      typeof (o as MenuOption).label === "string",
+  );
+  return { title: typeof title === "string" ? title : "", options: list };
 }
 
 /** Several options on one target: a small list in the middle; a click or its number picks, Esc closes. */
 export function OptionMenu() {
   const [menu, setMenu] = useState<{
-    title: string
-    options: MenuOption[]
-  } | null>(null)
+    title: string;
+    options: MenuOption[];
+  } | null>(null);
 
   useNuiEvent(
     NuiMessage.openMenu,
     (value: unknown) => setMenu(toMenu(value)),
-    OPEN_OPTIONS
-  )
-  useNuiEvent(NuiMessage.closeMenu, () => setMenu(null))
+    OPEN_OPTIONS,
+  );
+  useNuiEvent(NuiMessage.closeMenu, () => setMenu(null));
 
   const pick = (index: number) => {
-    setMenu(null)
-    void fetchNui<boolean>(NuiCallback.select, index, { mockData: true })
-  }
+    setMenu(null);
+    void fetchNui<boolean>(NuiCallback.select, index, { mockData: true });
+  };
 
   useEffect(() => {
-    if (!menu) return
+    if (!menu) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setMenu(null)
+        setMenu(null);
         void fetchNui<boolean>(NuiCallback.closeMenu, undefined, {
           mockData: true,
-        })
+        });
       }
-      const number = Number(event.key)
+      const number = Number(event.key);
       const option =
         Number.isInteger(number) && number > 0
           ? menu.options[number - 1]
-          : undefined
-      if (option) pick(option.index)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [menu])
+          : undefined;
+      if (option) pick(option.index);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menu]);
 
-  if (!menu) return null
+  if (!menu) return null;
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <motion.div
@@ -104,5 +104,5 @@ export function OptionMenu() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

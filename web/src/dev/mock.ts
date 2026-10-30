@@ -2,17 +2,17 @@ import type {
   MenuOption,
   TargetCamera,
   TargetPoint,
-} from "../../../resource/common/nui"
+} from "../../../resource/common/nui";
 
 /**
  * Browser preview only: `?view=target` places a camera at the origin looking north and four markers in front of it
  * (the one in the middle gets the focus, one is out of reach); `?view=menu` opens the pick menu.
  */
-const view = new URLSearchParams(window.location.search).get("view")
+const view = new URLSearchParams(window.location.search).get("view");
 
 export function mockPoints():
   { points: TargetPoint[]; key: string } | undefined {
-  if (view !== "target") return undefined
+  if (view !== "target") return undefined;
   return {
     key: "E",
     points: [
@@ -53,16 +53,16 @@ export function mockPoints():
         reachable: false,
       },
     ],
-  }
+  };
 }
 
 export function mockCamera(): TargetCamera | undefined {
-  return view === "target" ? [0, 0, 1.6, 0, 0, 50] : undefined
+  return view === "target" ? [0, 0, 1.6, 0, 0, 50] : undefined;
 }
 
 export function mockMenu():
   { title: string; options: MenuOption[] } | undefined {
-  if (view !== "menu") return undefined
+  if (view !== "menu") return undefined;
   return {
     title: "Vehicle",
     options: [
@@ -70,5 +70,5 @@ export function mockMenu():
       { index: 1, label: "Lock the doors" },
       { index: 2, label: "Check the fuel" },
     ],
-  }
+  };
 }
