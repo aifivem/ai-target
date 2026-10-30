@@ -22,6 +22,7 @@ export function mockPoints():
         y: 4,
         z: 1.55,
         label: "Open the trunk",
+        icon: "fa-solid fa-car-rear",
         count: 3,
         reachable: true,
       },
@@ -31,6 +32,7 @@ export function mockPoints():
         y: 5,
         z: 1.2,
         label: "Talk",
+        icon: "fa-solid fa-comments",
         count: 1,
         reachable: true,
       },
@@ -40,6 +42,7 @@ export function mockPoints():
         y: 6,
         z: 1.6,
         label: "Use the ATM",
+        icon: "credit-card",
         count: 1,
         reachable: true,
       },
@@ -66,9 +69,9 @@ export function mockMenu():
   return {
     title: "Vehicle",
     options: [
-      { index: 0, label: "Open the trunk" },
-      { index: 1, label: "Lock the doors" },
-      { index: 2, label: "Check the fuel" },
+      { index: 0, label: "Open the trunk", icon: "fa-solid fa-box-open" },
+      { index: 1, label: "Lock the doors", icon: "lock" },
+      { index: 2, label: "Check the fuel", icon: "gas-pump" },
     ],
   };
 }

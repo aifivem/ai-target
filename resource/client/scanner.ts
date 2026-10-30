@@ -224,6 +224,7 @@ export class Scanner {
       y: round(p.coords.y),
       z: round(p.coords.z),
       label: (p.usable[0] ?? p.visible[0])?.label ?? "",
+      icon: (p.usable[0] ?? p.visible[0])?.icon,
       count: p.usable.length,
       reachable: p.usable.length > 0,
     }));

@@ -1,28 +1,19 @@
 # ai-target
 
-What it does in 1-2 sentences. What it depends on (ai-core, other scripts).
+The target eye: markers on entities and zones near the camera, the interaction key picks the focused one, several options open a small menu. Answers the ox_target API under its own name and as `ox_target` (`provide`), so ox_target scripts and lib `Points` (target mode) work on it. Depends on ai-core (interaction key).
 
 ## Decisions
 
-- Why it is built this way; owner decisions; rejected alternatives and why.
+- ai-target is the provider: it never uses lib `Points` itself.
+- Option icons are any Font Awesome solid name (`fa-solid fa-store`, `fas fa-store` or `store`); the overlay loads the whole solid set as its own chunk after start (`web/src/lib/icon.tsx`), so the first frame stays light.
+- Global options (`addGlobalOption`) are not offered: they belong on a radial menu.
 
 ## Contracts
 
-- Exports, callback/event names (direction and payload type, pointing at the file in `resource/common/`), state bag keys, DB tables, links to other scripts.
-
-## Pitfalls
-
-- Problems already paid for that reading the code does not reveal.
+- ox_target exports (zones, models, entities, local entities, global ped / vehicle / object / player options): `resource/client/api.ts`; option shape `resource/common/options.ts`.
+- NUI messages and callbacks: `resource/common/nui.ts`.
 
 ## Entry points
 
-- For X start at `resource/server/...`.
-- For Y in the NUI see `web/src/features/...`.
-
-<!--
-Rules (this comment may stay in the copy):
-- Delete a section that would stay empty. No file, function or column lists: what reading the code shows does not go here.
-- No dates, phases, TODOs or "changed/removed" notes; current truth in imperative form.
-- Knowledge about one folder (a subsystem, the NUI) goes into a CLAUDE.md in that folder (resource/server/<topic>/CLAUDE.md,
-  web/CLAUDE.md); it loads automatically when a file there is read. This root file keeps what the whole script needs.
--->
+- Exports `resource/client/api.ts`, what is near and in focus `client/scanner.ts`, the key and the menu `client/interaction.ts`.
+- Overlay markers `web/src/overlay/Overlay.tsx`, option menu `web/src/menu/OptionMenu.tsx`; preview `bun run webdev` with `?view=target` or `?view=menu`.

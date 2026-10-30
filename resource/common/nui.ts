@@ -7,6 +7,8 @@ export interface TargetPoint {
   y: number;
   z: number;
   label: string;
+  /** Font Awesome icon of the first option (`fa-solid fa-store` or `store`). */
+  icon?: string;
   /** Options in reach; more than one opens the menu. */
   count: number;
   reachable: boolean;

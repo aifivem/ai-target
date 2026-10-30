@@ -7,6 +7,7 @@ import {
   type MenuOption,
 } from "../../../resource/common/nui";
 import { mockMenu } from "../dev/mock";
+import { OptionIcon } from "../lib/icon";
 
 const OPEN_OPTIONS = { mockData: mockMenu(), mockDelay: 200 };
 /** glide(0.25, 0.1) from tgiann-ui nui-performance: compositor tween. */
@@ -93,6 +94,9 @@ export function OptionMenu() {
               onClick={() => pick(option.index)}
               className="group flex h-[4vh] w-full items-center gap-[1.2vh] rounded-[0.8vh] px-[1vh] text-left transition-colors duration-150 hover:bg-white/6 active:bg-white/10"
             >
+              <span className="flex w-[1.8vh] shrink-0 justify-center text-[1.4vh] text-white/70 transition-colors duration-150 group-hover:text-tgi-green">
+                <OptionIcon name={option.icon} />
+              </span>
               <span className="min-w-0 grow truncate text-[1.4vh] leading-[1.3] font-semibold text-white">
                 {option.label}
               </span>

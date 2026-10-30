@@ -8,6 +8,7 @@ import {
 } from "../../../resource/common/nui";
 import { mockCamera, mockPoints } from "../dev/mock";
 import { pickFocus, type Spot } from "./focus";
+import { OptionIcon } from "../lib/icon";
 import { makeProjector } from "./projection";
 
 const POINTS_OPTIONS = { mockData: mockPoints(), mockDelay: 200 };
@@ -152,6 +153,7 @@ function Marker({
         {keyLabel}
       </span>
       <span className="flex items-center gap-[0.6vh] text-[1.5vh] font-bold whitespace-nowrap text-white uppercase [text-shadow:0.1vh_0.1vh_0_rgba(0,0,0,0.75)]">
+        <OptionIcon name={point.icon} className="text-[1.3vh]" />
         {point.label}
         {point.count > 1 && (
           <span className="text-[1.2vh] text-white/70">+{point.count - 1}</span>
