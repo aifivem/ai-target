@@ -7,7 +7,7 @@
   "author": {
     "name": "TGIANN"
   },
-  "repository": "github:TGIANN/ai-target",
+  "repository": "github:aifivem/ai-target",
   "type": "module",
   "fxDependencies": [
     "/onesync",
