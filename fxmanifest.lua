@@ -1,6 +1,6 @@
 name 'ai-target'
 author 'TGIANN'
-version '0.1.0' -- x-release-please-version
+version '0.2.0' -- x-release-please-version
 license 'GPL-3.0-only'
 description 'Targeting: markers on what you can interact with, ox_target compatible'
 repository 'https://github.com/aifivem/ai-target'
