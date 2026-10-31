@@ -10,7 +10,7 @@ import { mockMenu } from "../dev/mock";
 import { OptionIcon } from "../lib/icon";
 
 const OPEN_OPTIONS = { mockData: mockMenu(), mockDelay: 200 };
-/** glide(0.25, 0.1) from tgiann-ui nui-performance: compositor tween. */
+/** glide(0.25, 0.1) from aicore-ui performance.md: compositor tween. */
 const ENTER = {
   type: "tween",
   duration: 0.22,
