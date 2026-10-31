@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/aifivem/ai-target/compare/v0.2.0...v0.2.1) (2026-10-31)
+
+
+### Miscellaneous Chores
+
+* rebuild with the current lib ([397f876](https://github.com/aifivem/ai-target/commit/397f876a56fab444a5b26d92c38b8a916b25c930))
+
 ## [0.2.0](https://github.com/aifivem/ai-target/compare/v0.1.0...v0.2.0) (2026-10-31)
 
 
