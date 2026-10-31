@@ -1,4 +1,8 @@
-import { provideExport, registerExport } from "@aicore-fivem/lib/client";
+import {
+  caller,
+  provideExport,
+  registerExport,
+} from "@aicore-fivem/lib/client";
 import { createLogger, isRecord } from "@aicore-fivem/lib/shared";
 import { ResourceName } from "common";
 import { toNames, toOptions } from "common/options";
@@ -7,7 +11,6 @@ import type { Scanner } from "./scanner";
 import type { TargetZoneShape, Vec3 } from "./zones";
 
 const log = createLogger(ResourceName);
-const caller = (): string => GetInvokingResource() || ResourceName;
 
 /** A vector from another resource: a Lua vector3 arrives as an array, a table as an object. */
 function toVec3(value: unknown): Vec3 | null {

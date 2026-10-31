@@ -1,3 +1,4 @@
+import { ByResource } from "@aicore-fivem/lib/client";
 import type { TargetOption } from "common/options";
 
 /**
@@ -88,7 +89,10 @@ export function zoneAnchor(zone: TargetZone, playerZ: number): Vec3 {
 }
 
 export class TargetZones {
-  private readonly byId = new Map<number, TargetZone>();
+  /** Zones by id under the resource that added them: a stopping resource's zones go (O(its zones)). */
+  private readonly byId = new ByResource<number, TargetZone>({
+    onDrop: (_resource, _id, zone) => this.unlink(zone),
+  });
   private readonly byName = new Map<string, number>();
   private readonly grid = new Map<number, TargetZone[]>();
   private nextId = 1;
@@ -125,7 +129,7 @@ export class TargetZones {
         zone.cells.push(key);
       }
     }
-    this.byId.set(zone.id, zone);
+    this.byId.set(zone.id, zone, resource);
     if (name) this.byName.set(name, zone.id);
     return zone.id;
   }
@@ -134,7 +138,13 @@ export class TargetZones {
     const zone = this.byId.get(id);
     if (!zone) return false;
     this.byId.delete(id);
-    if (zone.name && this.byName.get(zone.name) === id)
+    this.unlink(zone);
+    return true;
+  }
+
+  /** Takes a zone out of the name index and the grid. */
+  private unlink(zone: TargetZone): void {
+    if (zone.name && this.byName.get(zone.name) === zone.id)
       this.byName.delete(zone.name);
     for (const key of zone.cells) {
       const cell = this.grid.get(key);
@@ -143,7 +153,6 @@ export class TargetZones {
       if (index >= 0) cell.splice(index, 1);
       if (cell.length === 0) this.grid.delete(key);
     }
-    return true;
   }
 
   removeNamed(name: string): boolean {
@@ -152,12 +161,9 @@ export class TargetZones {
   }
 
   exists(id: number | string): boolean {
-    return typeof id === "number" ? this.byId.has(id) : this.byName.has(id);
-  }
-
-  removeResource(resource: string): void {
-    for (const zone of this.byId.values())
-      if (zone.resource === resource) this.remove(zone.id);
+    return typeof id === "number"
+      ? this.byId.get(id) !== undefined
+      : this.byName.has(id);
   }
 
   /** Zones whose bounding circle comes within `range` metres of (x, y); each zone once. */

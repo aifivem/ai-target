@@ -7,6 +7,7 @@ The target eye: markers on entities and zones near the camera, the interaction k
 - ai-target is the provider: it never uses lib `Points` itself.
 - Option icons are any Font Awesome solid name (`fa-solid fa-store`, `fas fa-store` or `store`); the overlay loads the whole solid set as its own chunk after start (`web/src/lib/icon.tsx`), so the first frame stays light.
 - Global options (`addGlobalOption`) are not offered: they belong on a radial menu.
+- The calling resource is lib `caller()`. Zones are kept per resource in a lib `ByResource` (a stopping resource's zones go in O(its zones)); options on models, entities and global kinds carry their `resource` and are filtered on that resource's stop (one key holds options of several resources, which `ByResource` does not model).
 
 ## Contracts
 

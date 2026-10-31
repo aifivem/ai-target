@@ -86,8 +86,8 @@ class Registry {
     this.modelsVersion++;
   }
 
+  /** Drops a stopped resource's options (its zones go by themselves: `TargetZones` keeps them per resource). */
   removeResource(resource: string): void {
-    this.zones.removeResource(resource);
     this.models.removeResource(resource);
     this.netEntities.removeResource(resource);
     this.localEntities.removeResource(resource);
