@@ -6,23 +6,25 @@ import type {
 
 /**
  * Browser preview only: `?view=target` places a camera at the origin looking north and four markers in front of it
- * (the one in the middle gets the focus, one is out of reach); `?view=menu` opens the pick menu.
+ * (the one in the middle gets the focus, one is out of reach); `?view=aim` turns the camera a little so no marker is
+ * focused and the crosshair shows; `?view=menu` opens the pick menu.
  */
 const view = new URLSearchParams(window.location.search).get("view");
+const markers = view === "target" || view === "aim";
 
 export function mockPoints():
   { points: TargetPoint[]; key: string } | undefined {
-  if (view !== "target") return undefined;
+  if (!markers) return undefined;
   return {
     key: "E",
     points: [
       {
         key: "e:1",
-        x: 0.05,
+        x: 0.02,
         y: 4,
-        z: 1.55,
-        label: "Open the trunk",
-        icon: "fa-solid fa-car-rear",
+        z: 1.58,
+        distance: 1.5,
+        label: "3 options",
         count: 3,
         reachable: true,
       },
@@ -31,8 +33,8 @@ export function mockPoints():
         x: -1.6,
         y: 5,
         z: 1.2,
+        distance: 2.5,
         label: "Talk",
-        icon: "fa-solid fa-comments",
         count: 1,
         reachable: true,
       },
@@ -41,8 +43,8 @@ export function mockPoints():
         x: 1.8,
         y: 6,
         z: 1.6,
+        distance: 3.5,
         label: "Use the ATM",
-        icon: "credit-card",
         count: 1,
         reachable: true,
       },
@@ -51,7 +53,8 @@ export function mockPoints():
         x: 4,
         y: 12,
         z: 2,
-        label: "Far away",
+        distance: 6,
+        label: "",
         count: 0,
         reachable: false,
       },
@@ -59,8 +62,9 @@ export function mockPoints():
   };
 }
 
-export function mockCamera(): TargetCamera | undefined {
-  return view === "target" ? [0, 0, 1.6, 0, 0, 50] : undefined;
+export function mockFrame(): { camera: TargetCamera } | undefined {
+  if (!markers) return undefined;
+  return { camera: [0, 0, 1.6, 0, view === "aim" ? 3 : 0, 50] };
 }
 
 export function mockMenu():

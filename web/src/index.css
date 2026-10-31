@@ -3,6 +3,7 @@
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
 @import "@fontsource/inter/700.css";
+@import "@fontsource/inter/700-italic.css";
 @import "@fontsource/unbounded/800.css";
 @import "@fortawesome/fontawesome-svg-core/styles.css" layer(base);
 
@@ -71,6 +72,7 @@
   --radius-3xl: calc(var(--radius) + 1.2vh);
 
   --animate-fade: fade 0.25s ease-out both;
+  --animate-fade-in: fade 0.15s ease-out both;
 }
 
 @keyframes fade {

@@ -46,6 +46,7 @@ export class Interaction {
   interact(): boolean {
     const point = this.focus ? this.scanner.points.get(this.focus) : undefined;
     if (!point || this.menu || point.usable.length === 0) return false;
+    SendNUIMessage({ action: NuiMessage.pressed });
     if (point.usable.length === 1) {
       runOption(point.usable[0]!, point);
       return true;

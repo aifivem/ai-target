@@ -6,9 +6,10 @@ export interface TargetPoint {
   x: number;
   y: number;
   z: number;
+  /** Metres from the player in 0.5 m steps: nearer markers draw larger and brighter and win a tie for the focus. */
+  distance: number;
+  /** What the focused prompt says: the option's label, "3 options" for several, empty out of reach. */
   label: string;
-  /** Font Awesome icon of the first option (`fa-solid fa-store` or `store`). */
-  icon?: string;
   /** Options in reach; more than one opens the menu. */
   count: number;
   reachable: boolean;
@@ -16,6 +17,14 @@ export interface TargetPoint {
 
 /** The game camera: x, y, z, pitch, yaw (degrees), vertical fov (degrees). */
 export type TargetCamera = [number, number, number, number, number, number];
+
+/** A marker on a moving entity: where it is now. */
+export interface TargetMove {
+  key: string;
+  x: number;
+  y: number;
+  z: number;
+}
 
 export interface MenuOption {
   index: number;
@@ -27,8 +36,10 @@ export interface MenuOption {
 export const NuiMessage = {
   /** data: { points: TargetPoint[], key: string }, the markers (or the bound interaction key) changed; sent only on change. */
   points: "points",
-  /** data: TargetCamera, sent while markers exist and the camera moved. */
-  camera: "camera",
+  /** data: { camera?: TargetCamera, moves?: TargetMove[] }, while markers exist: what moved since the last frame. */
+  frame: "frame",
+  /** The focused marker took the interaction key: the prompt plays its press. */
+  pressed: "pressed",
   /** data: { title, options: MenuOption[] }, several options: pick one. */
   openMenu: "openMenu",
   closeMenu: "closeMenu",

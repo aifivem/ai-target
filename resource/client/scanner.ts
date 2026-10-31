@@ -7,9 +7,10 @@ import {
 import { createLogger } from "@aicore-fivem/lib/shared";
 import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
+import Locale from "common/locale";
 import { NuiMessage, type TargetPoint } from "common/nui";
 import { MARKER_EXTRA, reachOf, type TargetOption } from "common/options";
-import { CameraStream } from "./camera";
+import { CameraStream, type Follow } from "./camera";
 import { allowed, currentMemberships } from "./conditions";
 import { entityAnchor, entityDistance } from "./geometry";
 import { registry } from "./registry";
@@ -30,6 +31,8 @@ export interface ScanPoint {
   usable: TargetOption[];
   /** Options whose marker shows (allowed, within reach + a few metres). */
   visible: TargetOption[];
+  /** On a moving entity: where on it the marker sits (the camera stream follows it every frame). */
+  follow?: Vec3;
 }
 
 const SCAN_NEAR = 250;
@@ -39,6 +42,8 @@ const WALK_EVERY = 1000;
 const ZONE_RANGE = 15;
 /** Line of sight is probed for at most this many markers per scan, the nearest first. */
 const LOS_LIMIT = 16;
+/** A ped or vehicle faster than this (m/s) gets its marker moved every frame, not every scan. */
+const MOVING_SPEED = 0.05;
 
 /** Line of sight one scan behind: a probe started now is read on the next scan, so nothing waits for it. */
 class Sight {
@@ -191,29 +196,51 @@ export class Scanner {
       ];
       if (options.length === 0) continue;
       const isPed = near.kind === "ped" || near.kind === "player";
+      const anchor = entityAnchor(near.entity, near.model, isPed);
       const distance = isPed
-        ? Math.hypot(
-            ...difference(entityAnchor(near.entity, near.model, true), player),
-          )
+        ? Math.hypot(...difference(anchor, player))
         : entityDistance(near.entity, near.model, player);
-      this.collect(
+      const point = this.collect(
         found,
         `e:${near.entity}`,
         near.entity,
         null,
-        entityAnchor(near.entity, near.model, isPed),
+        anchor,
         distance,
         options,
         held,
       );
+      if (
+        point &&
+        near.kind !== "object" &&
+        GetEntitySpeed(near.entity) > MOVING_SPEED
+      ) {
+        const [ox = 0, oy = 0, oz = 0] = GetOffsetFromEntityGivenWorldCoords(
+          near.entity,
+          anchor.x,
+          anchor.y,
+          anchor.z,
+        );
+        point.follow = { x: ox, y: oy, z: oz };
+      }
     }
 
     found.sort((a, b) => a.distance - b.distance);
     this.sight.update(found);
     this.points.clear();
-    for (const point of found)
-      if (this.sight.visible(point.key)) this.points.set(point.key, point);
+    const follows: Follow[] = [];
+    for (const point of found) {
+      if (!this.sight.visible(point.key)) continue;
+      this.points.set(point.key, point);
+      if (point.follow)
+        follows.push({
+          key: point.key,
+          entity: point.entity,
+          offset: point.follow,
+        });
+    }
     this.send([...this.points.values()]);
+    this.camera.follow(follows);
   }
 
   private collect(
@@ -225,7 +252,7 @@ export class Scanner {
     distance: number,
     options: TargetOption[],
     held: Map<string, number>,
-  ): void {
+  ): ScanPoint | undefined {
     const visible: TargetOption[] = [];
     const usable: TargetOption[] = [];
     for (const option of options) {
@@ -238,8 +265,10 @@ export class Scanner {
       visible.push(option);
       if (distance <= reach) usable.push(option);
     }
-    if (visible.length)
-      out.push({ key, entity, zone, coords, distance, usable, visible });
+    if (visible.length === 0) return undefined;
+    const point = { key, entity, zone, coords, distance, usable, visible };
+    out.push(point);
+    return point;
   }
 
   /** The overlay gets the list only when something it draws changed. */
@@ -249,8 +278,11 @@ export class Scanner {
       x: round(p.coords.x),
       y: round(p.coords.y),
       z: round(p.coords.z),
-      label: (p.usable[0] ?? p.visible[0])?.label ?? "",
-      icon: (p.usable[0] ?? p.visible[0])?.icon,
+      distance: Math.round(p.distance * 2) / 2,
+      label:
+        p.usable.length > 1
+          ? Locale("TARGET_OPTIONS", p.usable.length)
+          : (p.usable[0]?.label ?? ""),
       count: p.usable.length,
       reachable: p.usable.length > 0,
     }));
