@@ -1,4 +1,4 @@
-import { cache } from "@aicore-fivem/lib/client";
+import { cache, entityFromNetId } from "@aicore-fivem/lib/client";
 import { sleep } from "@aicore-fivem/lib/shared";
 import { registry, type GlobalKind } from "./registry";
 
@@ -87,9 +87,8 @@ export class Walker {
     for (const entity of registry.localEntities.map.keys())
       if (DoesEntityExist(entity) && near(entity)) keep(entity, kindOf(entity));
     for (const netId of registry.netEntities.map.keys()) {
-      if (!NetworkDoesEntityExistWithNetworkId(netId)) continue;
-      const entity = NetworkGetEntityFromNetworkId(netId);
-      if (near(entity)) keep(entity, kindOf(entity));
+      const entity = entityFromNetId(netId);
+      if (entity && near(entity)) keep(entity, kindOf(entity));
     }
 
     let read = 0;

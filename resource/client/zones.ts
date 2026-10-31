@@ -1,5 +1,6 @@
 import { ByResource } from "@aicore-fivem/lib/client";
 import type { TargetOption } from "common/options";
+import { cellKey, flatDistance, gridCell } from "@aicore-fivem/lib/shared";
 
 /**
  * Target zones (ox_target's sphere, box and poly) in a grid of 64 m cells: a scan asks only for the zones whose
@@ -37,8 +38,6 @@ export interface TargetZone {
 }
 
 const CELL = 64;
-const cellKey = (cx: number, cy: number): number =>
-  ((cx + 32768) << 16) | (cy + 32768);
 
 /** Centre and bounding radius of a shape on the ground plane. */
 function circle(shape: TargetZoneShape): [number, number, number] {
@@ -58,8 +57,9 @@ function circle(shape: TargetZoneShape): [number, number, number] {
   }
   const cx = sx / shape.points.length;
   const cy = sy / shape.points.length;
+  const center = { x: cx, y: cy };
   let r = 0;
-  for (const p of shape.points) r = Math.max(r, Math.hypot(p.x - cx, p.y - cy));
+  for (const p of shape.points) r = Math.max(r, flatDistance(p, center));
   return [cx, cy, r];
 }
 
@@ -116,10 +116,8 @@ export class TargetZones {
       reach,
       cells: [],
     };
-    const x0 = Math.floor((cx - reach) / CELL);
-    const x1 = Math.floor((cx + reach) / CELL);
-    const y0 = Math.floor((cy - reach) / CELL);
-    const y1 = Math.floor((cy + reach) / CELL);
+    const { cx: x0, cy: y0 } = gridCell(cx - reach, cy - reach, CELL);
+    const { cx: x1, cy: y1 } = gridCell(cx + reach, cy + reach, CELL);
     for (let x = x0; x <= x1; x++) {
       for (let y = y0; y <= y1; y++) {
         const key = cellKey(x, y);
@@ -169,10 +167,8 @@ export class TargetZones {
   /** Zones whose bounding circle comes within `range` metres of (x, y); each zone once. */
   near(x: number, y: number, range: number, out: TargetZone[]): void {
     out.length = 0;
-    const x0 = Math.floor((x - range) / CELL);
-    const x1 = Math.floor((x + range) / CELL);
-    const y0 = Math.floor((y - range) / CELL);
-    const y1 = Math.floor((y + range) / CELL);
+    const { cx: x0, cy: y0 } = gridCell(x - range, y - range, CELL);
+    const { cx: x1, cy: y1 } = gridCell(x + range, y + range, CELL);
     for (let cx = x0; cx <= x1; cx++) {
       for (let cy = y0; cy <= y1; cy++) {
         const cell = this.grid.get(cellKey(cx, cy));

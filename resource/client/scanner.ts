@@ -1,4 +1,9 @@
-import { cache, every, resourceExport } from "@aicore-fivem/lib/client";
+import {
+  cache,
+  every,
+  medical,
+  resourceExport,
+} from "@aicore-fivem/lib/client";
 import { createLogger } from "@aicore-fivem/lib/shared";
 import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
@@ -129,7 +134,7 @@ export class Scanner {
       !IsNuiFocused() &&
       GetRenderingCam() === -1 &&
       cache.vehicle === false &&
-      !IsEntityDead(cache.ped)
+      !medical.isDead()
     );
   }
 
