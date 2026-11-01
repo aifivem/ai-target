@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/aifivem/ai-target/compare/v0.2.1...v0.2.2) (2026-11-01)
+
+
+### Code Refactoring
+
+* feature folders, side entries that only import, panel schema per tab ([6685a50](https://github.com/aifivem/ai-target/commit/6685a5062e94b63cfadacc66d53a51bfc7c42b8a))
+
 ## [0.2.1](https://github.com/aifivem/ai-target/compare/v0.2.0...v0.2.1) (2026-10-31)
 
 
