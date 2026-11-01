@@ -16,5 +16,5 @@ The target eye: markers on entities and zones near the camera, the interaction k
 
 ## Entry points
 
-- Exports `resource/client/api.ts`, what is near and in focus `client/scanner.ts`, the key and the menu `client/interaction.ts`.
+- Start (scanner, key and exports wired together) `resource/client/target.ts`; exports `resource/client/api.ts`, what is near and in focus `client/scanner.ts` (markers and their usable options `scanPoint.ts`, line of sight `sight.ts`, the overlay list `targetPoints.ts`, the bound key `interactKey.ts`), the key and the menu `client/interaction.ts`.
 - Overlay markers, crosshair and focus prompt `web/src/overlay/` (look, focus and positioning: its `CLAUDE.md`), option menu `web/src/menu/OptionMenu.tsx`; preview `bun run webdev` with `?view=target`, `?view=aim` or `?view=menu`.

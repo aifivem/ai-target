@@ -65,3 +65,9 @@ export function entityDistance(
   const dz = Math.max((min[2] ?? 0) - lz, 0, lz - (max[2] ?? 0));
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
+
+export const difference = (a: Vec3, b: Vec3): [number, number, number] => [
+  a.x - b.x,
+  a.y - b.y,
+  a.z - b.z,
+];

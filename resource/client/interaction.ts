@@ -2,7 +2,8 @@ import { controls, registerExport } from "@aicore-fivem/lib/client";
 import { NuiCallback, NuiMessage } from "common/nui";
 import type { TargetOption } from "common/options";
 import { runOption } from "./actions";
-import type { ScanPoint, Scanner } from "./scanner";
+import type { ScanPoint } from "./scanPoint";
+import type { Scanner } from "./scanner";
 
 /** GTA's own uses of E (INPUT_CONTEXT, INPUT_TALK, INPUT_VEH_HORN) stay off while a marker is focused. */
 const BLOCKED_CONTROLS = [38, 51, 86];

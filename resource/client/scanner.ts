@@ -1,91 +1,27 @@
-import {
-  cache,
-  every,
-  medical,
-  resourceExport,
-} from "@aicore-fivem/lib/client";
+import { cache, every, medical } from "@aicore-fivem/lib/client";
 import { createLogger } from "@aicore-fivem/lib/shared";
-import { CORE } from "@aicore-fivem/shared";
 import { ResourceName } from "common";
-import Locale from "common/locale";
-import { NuiMessage, type TargetPoint } from "common/nui";
-import { MARKER_EXTRA, reachOf, type TargetOption } from "common/options";
+import { NuiMessage } from "common/nui";
 import { CameraStream, type Follow } from "./camera";
-import { allowed, currentMemberships } from "./conditions";
-import { entityAnchor, entityDistance } from "./geometry";
+import { currentMemberships } from "./conditions";
+import { difference, entityAnchor, entityDistance } from "./geometry";
+import { interactKey } from "./interactKey";
 import { registry } from "./registry";
+import { collectPoint, type ScanPoint } from "./scanPoint";
+import { Sight } from "./sight";
+import { toTargetPoints } from "./targetPoints";
 import { Walker } from "./walker";
-import { zoneAnchor, type TargetZone, type Vec3 } from "./zones";
+import { zoneAnchor, type TargetZone } from "./zones";
 
 const log = createLogger(ResourceName);
-const core = resourceExport(CORE.resource);
-
-/** A marker with what it needs to act: its options in reach, the entity or zone, where it is. */
-export interface ScanPoint {
-  key: string;
-  entity: number;
-  zone: number | null;
-  coords: Vec3;
-  distance: number;
-  /** Options the player can use now (in reach and allowed). */
-  usable: TargetOption[];
-  /** Options whose marker shows (allowed, within reach + a few metres). */
-  visible: TargetOption[];
-  /** On a moving entity: where on it the marker sits (the camera stream follows it every frame). */
-  follow?: Vec3;
-}
 
 const SCAN_NEAR = 250;
 const SCAN_IDLE = 1000;
 const WALK_EVERY = 1000;
 /** Zones are looked up this far around the player (their circle radius is added). */
 const ZONE_RANGE = 15;
-/** Line of sight is probed for at most this many markers per scan, the nearest first. */
-const LOS_LIMIT = 16;
 /** A ped or vehicle faster than this (m/s) gets its marker moved every frame, not every scan. */
 const MOVING_SPEED = 0.05;
-
-/** Line of sight one scan behind: a probe started now is read on the next scan, so nothing waits for it. */
-class Sight {
-  private readonly probes = new Map<
-    string,
-    { handle: number; visible: boolean }
-  >();
-
-  visible(key: string): boolean {
-    return this.probes.get(key)?.visible ?? true;
-  }
-
-  update(points: ScanPoint[]): void {
-    const [cx = 0, cy = 0, cz = 0] = GetFinalRenderedCamCoord();
-    const keep = new Set<string>();
-    for (const point of points.slice(0, LOS_LIMIT)) {
-      keep.add(point.key);
-      const probe = this.probes.get(point.key);
-      if (probe) {
-        const [status, hit] = GetShapeTestResult(probe.handle);
-        // 1 = still running; read it next time.
-        if (status === 1) continue;
-        probe.visible = !hit;
-      }
-      // World only (flag 1): the target itself or a rack next to it must not hide its own marker.
-      const handle = StartShapeTestLosProbe(
-        cx,
-        cy,
-        cz,
-        point.coords.x,
-        point.coords.y,
-        point.coords.z,
-        1,
-        cache.ped,
-        7,
-      );
-      this.probes.set(point.key, { handle, visible: probe?.visible ?? true });
-    }
-    for (const key of this.probes.keys())
-      if (!keep.has(key)) this.probes.delete(key);
-  }
-}
 
 /**
  * The target loop: every 250 ms while markers are around (1 s otherwise) it reads the zones and entities near the
@@ -172,7 +108,7 @@ export class Scanner {
     for (const zone of this.zones) {
       const coords = zoneAnchor(zone, pz);
       const distance = Math.hypot(coords.x - px, coords.y - py, coords.z - pz);
-      this.collect(
+      collectPoint(
         found,
         `z:${zone.id}`,
         0,
@@ -200,7 +136,7 @@ export class Scanner {
       const distance = isPed
         ? Math.hypot(...difference(anchor, player))
         : entityDistance(near.entity, near.model, player);
-      const point = this.collect(
+      const point = collectPoint(
         found,
         `e:${near.entity}`,
         near.entity,
@@ -243,49 +179,9 @@ export class Scanner {
     this.camera.follow(follows);
   }
 
-  private collect(
-    out: ScanPoint[],
-    key: string,
-    entity: number,
-    zone: number | null,
-    coords: Vec3,
-    distance: number,
-    options: TargetOption[],
-    held: Map<string, number>,
-  ): ScanPoint | undefined {
-    const visible: TargetOption[] = [];
-    const usable: TargetOption[] = [];
-    for (const option of options) {
-      const reach = reachOf(option);
-      if (
-        distance > reach + MARKER_EXTRA ||
-        !allowed(option, entity, distance, coords, held)
-      )
-        continue;
-      visible.push(option);
-      if (distance <= reach) usable.push(option);
-    }
-    if (visible.length === 0) return undefined;
-    const point = { key, entity, zone, coords, distance, usable, visible };
-    out.push(point);
-    return point;
-  }
-
   /** The overlay gets the list only when something it draws changed. */
   private send(points: ScanPoint[]): void {
-    const list: TargetPoint[] = points.map((p) => ({
-      key: p.key,
-      x: round(p.coords.x),
-      y: round(p.coords.y),
-      z: round(p.coords.z),
-      distance: Math.round(p.distance * 2) / 2,
-      label:
-        p.usable.length > 1
-          ? Locale("TARGET_OPTIONS", p.usable.length)
-          : (p.usable[0]?.label ?? ""),
-      count: p.usable.length,
-      reachable: p.usable.length > 0,
-    }));
+    const list = toTargetPoints(points);
     const key = interactKey();
     const text = JSON.stringify(list) + key;
     if (text === this.lastSent) return;
@@ -294,25 +190,3 @@ export class Scanner {
     this.camera.set(list.length > 0);
   }
 }
-
-const round = (n: number): number => Math.round(n * 100) / 100;
-
-/** ai-core's interaction key as the player bound it (a mouse or pad binding comes back as an icon code: shown as E). */
-let interactHash = 0;
-function interactKey(): string {
-  if (!interactHash) {
-    // The mapping command carries the default key the admin panel set (`+aicore_interact_<key>`); asked until known.
-    const key = core.GetKeybindKey("aicore_interact");
-    if (typeof key !== "string") return "E";
-    interactHash = GetHashKey(`+aicore_interact_${key}`) | 0x80000000;
-  }
-  const label = GetControlInstructionalButton(0, interactHash, true).substring(
-    2,
-  );
-  return /^\w{1,6}$/.test(label) ? label : "E";
-}
-const difference = (a: Vec3, b: Vec3): [number, number, number] => [
-  a.x - b.x,
-  a.y - b.y,
-  a.z - b.z,
-];

@@ -1,12 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { fetchNui, useNuiEvent } from "fivem-nui-react";
-import {
-  NuiCallback,
-  NuiMessage,
-  type TargetCamera,
-  type TargetMove,
-  type TargetPoint,
-} from "../../../resource/common/nui";
+import { NuiCallback, NuiMessage } from "../../../resource/common/nui";
 import { mockFrame, mockPoints } from "../dev/mock";
 import { CameraSmoother } from "./cameraSmoother";
 import { leaveRing, placeDots, stayRing } from "./dots";
@@ -19,6 +13,7 @@ import {
   type Spot,
 } from "./focus";
 import { Positions } from "./positions";
+import { sameKeys, toFrame, toPoints } from "./parse";
 import { makeProjector } from "./projection";
 
 const POINTS_OPTIONS = { mockData: mockPoints(), mockDelay: 200 };
@@ -29,38 +24,6 @@ export interface TargetFocus {
   key: string;
   label: string;
 }
-
-function toPoints(
-  value: unknown,
-): { points: TargetPoint[]; key: string } | null {
-  if (typeof value !== "object" || value === null) return null;
-  const { points, key } = value as { points?: unknown; key?: unknown };
-  // The client builds this list itself; only its outer shape is checked.
-  return Array.isArray(points)
-    ? {
-        points: points as TargetPoint[],
-        key: typeof key === "string" ? key : "E",
-      }
-    : null;
-}
-
-function toFrame(
-  value: unknown,
-): { camera?: TargetCamera; moves?: TargetMove[] } | null {
-  if (typeof value !== "object" || value === null) return null;
-  const { camera, moves } = value as { camera?: unknown; moves?: unknown };
-  const isCamera =
-    Array.isArray(camera) &&
-    camera.length === 6 &&
-    camera.every((n) => typeof n === "number");
-  return {
-    camera: isCamera ? (camera as TargetCamera) : undefined,
-    moves: Array.isArray(moves) ? (moves as TargetMove[]) : undefined,
-  };
-}
-
-const sameKeys = (a: string[], b: string[]): boolean =>
-  a.length === b.length && a.every((key, i) => key === b[i]);
 
 /**
  * The client sends what changed (the marker list, camera and moving markers); this projects them in one animation
