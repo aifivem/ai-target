@@ -1,4 +1,4 @@
-import { cache } from "@aicore-fivem/lib/client";
+import { cache } from "@aifivem/lib/client";
 import type { ScanPoint } from "./scanPoint";
 
 /** Line of sight is probed for at most this many markers per scan, the nearest first. */

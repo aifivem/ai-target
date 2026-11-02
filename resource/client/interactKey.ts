@@ -1,5 +1,5 @@
-import { resourceExport } from "@aicore-fivem/lib/client";
-import { CORE } from "@aicore-fivem/shared";
+import { resourceExport } from "@aifivem/lib/client";
+import { CORE } from "@aifivem/shared";
 
 const core = resourceExport(CORE.resource);
 

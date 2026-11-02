@@ -1,5 +1,5 @@
-import { getPlayerData } from "@aicore-fivem/lib/client";
-import { createLogger } from "@aicore-fivem/lib/shared";
+import { getPlayerData } from "@aifivem/lib/client";
+import { createLogger } from "@aifivem/lib/shared";
 import { ResourceName } from "common";
 import type { TargetOption } from "common/options";
 import type { Vec3 } from "./zones";

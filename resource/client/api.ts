@@ -2,8 +2,8 @@ import {
   caller,
   provideExport,
   registerExport,
-} from "@aicore-fivem/lib/client";
-import { createLogger, isRecord } from "@aicore-fivem/lib/shared";
+} from "@aifivem/lib/client";
+import { createLogger, isRecord } from "@aifivem/lib/shared";
 import { ResourceName } from "common";
 import { toNames, toOptions } from "common/options";
 import { registry, type GlobalKind } from "./registry";

@@ -1,5 +1,5 @@
-import { cache } from "@aicore-fivem/lib/client";
-import { createLogger } from "@aicore-fivem/lib/shared";
+import { cache } from "@aifivem/lib/client";
+import { createLogger } from "@aifivem/lib/shared";
 import { ResourceName } from "common";
 import type { TargetOption } from "common/options";
 import type { ScanPoint } from "./scanPoint";

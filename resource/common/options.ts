@@ -1,4 +1,4 @@
-import { isRecord } from "@aicore-fivem/lib/shared";
+import { isRecord } from "@aifivem/lib/shared";
 
 /**
  * One interaction offered on a zone or entity, in ox_target's shape (other resources register them through the

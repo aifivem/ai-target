@@ -1,5 +1,5 @@
-import { cache, entityFromNetId } from "@aicore-fivem/lib/client";
-import { sleep } from "@aicore-fivem/lib/shared";
+import { cache, entityFromNetId } from "@aifivem/lib/client";
+import { sleep } from "@aifivem/lib/shared";
 import { registry, type GlobalKind } from "./registry";
 
 /** An entity near the player that has options of some kind. */
