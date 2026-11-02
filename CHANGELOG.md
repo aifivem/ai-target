@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.3](https://github.com/aifivem/ai-target/compare/v0.2.2...v0.2.3) (2026-11-02)
+
+
+### Bug Fixes
+
+* **build:** keep the web build in dist/ so release zips have the NUI ([4b7bfda](https://github.com/aifivem/ai-target/commit/4b7bfda01d136ab6f76a1d7ee121307ef7534554))
+
+
+### Code Refactoring
+
+* import the shared packages from [@aifivem](https://github.com/aifivem) ([748c749](https://github.com/aifivem/ai-target/commit/748c749d275fee66b7f35eabc04b671bff9b0086))
+
 ## [0.2.2](https://github.com/aifivem/ai-target/compare/v0.2.1...v0.2.2) (2026-11-01)
 
 
