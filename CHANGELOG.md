@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.4](https://github.com/aifivem/ai-target/compare/v0.2.3...v0.2.4) (2026-11-02)
+
+
+### Documentation
+
+* install from the release zip ([fbaf526](https://github.com/aifivem/ai-target/commit/fbaf526e9a4103b47742d4a34db4eedeaac962c4))
+
+
+### Miscellaneous Chores
+
+* build files are no longer in git, the release zip carries them ([29b3683](https://github.com/aifivem/ai-target/commit/29b36832bb53aa4c69c064c0313c2e29cb4de72d))
+
 ## [0.2.3](https://github.com/aifivem/ai-target/compare/v0.2.2...v0.2.3) (2026-11-02)
 
 

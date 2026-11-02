@@ -1,6 +1,6 @@
 {
   "name": "ai-target",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "description": "Targeting: markers on what you can interact with, ox_target compatible",
   "license": "GPL-3.0-only",
